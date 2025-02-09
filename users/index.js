@@ -35,6 +35,7 @@ router.post("/register", async (req, res, next) => {
     const password = await bcrypt.hash(normal_password, salt);
     const response = await createUser(first_name, last_name, email, password);
     const token = jwt.sign({ id: response.id }, process.env.JWT);
+    res.header("Access-Control-Allow-Origin", "*");
     res.send({ token });
   } catch (error) {
     next(error);
