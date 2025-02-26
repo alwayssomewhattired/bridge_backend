@@ -30,10 +30,10 @@ const isLoggedIn = async (req, res, next) => {
 
 router.post("/register", async (req, res, next) => {
   try {
-    const { first_name, last_name, email, normal_password } = req.body;
+    const { username, email, normal_password } = req.body;
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash(normal_password, salt);
-    const response = await createUser(first_name, last_name, email, password);
+    const response = await createUser(username, email, password);
     const token = jwt.sign({ id: response.id }, process.env.JWT);
     // res.header("Access-Control-Allow-Origin", "*");
     res.send({ token });
@@ -112,20 +112,14 @@ router.put("/:id", isLoggedIn, async (req, res, next) => {
       res.status(401).send("No user logged in.");
     }
     const id = req.params.id;
-    const { first_name, last_name, email, normal_password } = req.body;
+    const { username, email, normal_password } = req.body;
     if (normal_password == undefined) {
-      const response = await updateUser(id, first_name, last_name, email);
+      const response = await updateUser(id, username, email);
       res.send(response);
     } else {
       const salt = await bcrypt.genSalt(10);
       const password = await bcrypt.hash(normal_password, salt);
-      const response = await updateUser(
-        id,
-        first_name,
-        last_name,
-        email,
-        password
-      );
+      const response = await updateUser(id, username, email, password);
       res.send(response);
     }
   } catch (error) {

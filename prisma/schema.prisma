@@ -15,8 +15,46 @@ datasource db {
 
 model User {
   id  String  @id @default(uuid())
-  first_name  String
-  last_name   String
+  username String @unique
   email String @unique
   password  String  @unique
+
+  reviews Review[]
+  comments Comment[]
+}
+
+model Item {
+  id  String  @id @default(uuid())
+  name String
+
+  comments Comment[]
+  reviews Review[]
+}
+
+model Review {
+  id  String @id @default(uuid())
+  reviewText String
+
+  userID String
+  review User @relation(fields: [userID], references: [id], onDelete: Cascade)
+
+  itemID String
+  item Item @relation(fields: [itemID], references: [id], onDelete: Cascade)
+
+  @@unique([userID, itemID])
+  comments Comment[]
+}
+
+model Comment {
+  id          String @id @default(uuid())
+  commentText String
+
+  userID String
+  user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
+
+  itemID String
+  item Item @relation(fields: [itemID], references: [id], onDelete: Cascade)
+
+  reviewID  String
+  review Review @relation(fields: [reviewID], references: [id], onDelete: Cascade)
 }
