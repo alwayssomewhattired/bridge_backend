@@ -138,8 +138,8 @@ def downloader():
     # Logic for getting a random single song if multiple are returned
     # need to add availability for other file types, but so far mp3 has been every single one
     if len(output) == 0:
-        searcher()
-        downloader()
+        print("PROTOTYPE: Empty url. Starting server")
+        start_server()
     else:
         print (f"Output: {output}")
         print (f"Output length: {len(output)}")
