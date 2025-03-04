@@ -28,8 +28,12 @@ import contextlib
 import io
 import os
 
-# # Socket for TCP
+# # Socket for TCP (WINDOWS)
 import socket
+
+# Socket (LINUX)
+import asyncio
+import websockets
 
 # # audio file processing
 import requests
@@ -44,17 +48,22 @@ import boto3
 app = Flask(__name__)
 CORS(app)
 
+
+# commented out for testing...
 @app.route('/start', methods=['POST'])
 def start_function():
     data = request.json # Get JSON data from the frontend
     message = data.get("message", "No message received")
     response = {"response": f"Backend received: {message}"}
-    start_server()
+    # WEBSOCKETS (WINDOWS)
+    # start_server()
+    print("suck it")
     return jsonify(response)
 
 load_dotenv()
 
-print(os.getenv("AWS_SECRET_KEY"))
+# why on earth was i printing out my secret key :(
+# print(os.getenv("AWS_SECRET_KEY"))
 
 results = []
 indexer = 0
@@ -67,6 +76,7 @@ anotherlist = []
 output = None
 url = None
 NAME_FOR_S3 = "fetch-test.mp3"
+condition = False
 
 
 HOST = "127.0.0.1" # Localhost
@@ -76,48 +86,66 @@ PORT = 5000
 def my_function():
     print("TRIGGERED!!!")
 
-# Function for Websocket
-def start_server():
-    message = f"audio_now_uploaded:{NAME_FOR_S3}"
-
-    searcher()
-
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(1)
-
-    print("Waiting for C++ client to connect...")
-
-    while True:
-        conn, addr = server_socket.accept()
-        print(f"Connected to {addr}")
-        data = conn.recv(1024).decode("utf-8") # Receive and decode message
-        if not data:
-            print("not data")
-            break
-
-        print(f"Received from C++ {data}")
-
-        # Call function if message matches
-        if data.strip() == "run_function":
-            global indexer
-            random_number.append(random.randint(0, indexer))
-            print(f"random number: {random_number}")
-            print(f"Indexer {indexer}")
+# handler for Websocket (LINUX)
+async def handler(websocket):
+    print("Client connected")
+    async for message in websocket:
+        if message == "run_function":
+            print(f"Received from C++ client: {message}")
+            await websocket.send(f"Echo: {message}")
+            searcher()
             downloader()
             main()
+            await websocket.send("source_upload")
+        elif message == "finish_now":
+            print("Connection has been asked to close.")
+            # write logic to close connection here
 
-            conn.sendall(message.encode('utf-8'))
-        elif data.strip() == "finish_now":
-            print("Connection closed")
-            conn.close()
-            break
+
+
+
+# Function for Websocket (WINDOWS)
+# def start_server():
+#     message = f"audio_now_uploaded:{NAME_FOR_S3}"
+
+#     searcher()
+
+#     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     server_socket.bind((HOST, PORT))
+#     server_socket.listen(1)
+
+#     print("Waiting for C++ client to connect...")
+
+#     while True:
+#         conn, addr = server_socket.accept()
+#         print(f"Connected to {addr}")
+#         data = conn.recv(1024).decode("utf-8") # Receive and decode message
+#         if not data:
+#             print("not data")
+#             break
+
+#         print(f"Received from C++ {data}")
+
+#         # Call function if message matches
+#         if data.strip() == "run_function":
+#             global indexer
+#             random_number.append(random.randint(0, indexer))
+#             print(f"random number: {random_number}")
+#             print(f"Indexer {indexer}")
+#             downloader()
+#             main()
+
+#             conn.sendall(message.encode('utf-8'))
+#         elif data.strip() == "finish_now":
+#             print("Connection closed")
+#             conn.close()
+#             break
             
 
 # This gets a random song and stores the urls in the output variable
 def downloader():
     with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-        download(identifier=f"{results[random_number[0]]}", glob_pattern="*mp3", dry_run=True)
+        download(identifier=f"{results[random.randint(0, indexer)]}", glob_pattern="*mp3", dry_run=True)
         output = buffer.getvalue()
 
 # This is useful to display just the song name itself.
@@ -139,7 +167,7 @@ def downloader():
     # need to add availability for other file types, but so far mp3 has been every single one
     if len(output) == 0:
         print("PROTOTYPE: Empty url. Starting server")
-        start_server()
+        # start_server() // no server to start on linux... do something else
     else:
         print (f"Output: {output}")
         print (f"Output length: {len(output)}")
@@ -208,8 +236,6 @@ def main():
     FETCHED_DATA = requests.get(url)
     NAME_FOR_S3 = "fetch-test.mp3"
 
-    random_number.pop(0)
-
     print('in main method')
 
     s3_client = boto3.client(
@@ -222,8 +248,36 @@ def main():
     response = s3_client.upload_fileobj(io.BytesIO(FETCHED_DATA.content), AWS_S3_BUCKET_NAME, NAME_FOR_S3)
 
     print(f'upload_log_to_aws response: {response}')
+    
+    global condition
+    condition = True
 
-if __name__ == '__main__':
-    app.run(debug=True, port=4000) # DON'T USE RUN IN A PRODUCTION SETTING
+
+async def server():
+    global condition
+    condition = False
+    server = await websockets.serve(handler, "localhost", 9000)  # WebSocket server
+    print("WebSocket Server listening on ws://localhost:9000")
+    await server.wait_closed()
+
+asyncio.run(server())
+
+# if __name__ == '__main__':
+    # app.run(debug=True, port=4000) # DON'T USE RUN IN A PRODUCTION SETTING
     # start_server()
+    # server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # server_socket.bind((HOST, PORT))
+    # server_socket.listen(1)
+
+    # print("Waiting for C++ client to connect...")
+
+    # while True:
+    #     conn, addr = server_socket.accept()
+    #     print(f"Connected to {addr}")
+    #     data = conn.recv(1024).decode("utf-8") # Receive and decode message
+    #     if not data:
+    #         print("not data")
+    #         break
+
+    #     print(f"Received from C++ {data}")
 
