@@ -62,8 +62,6 @@ def start_function():
 
 load_dotenv()
 
-# why on earth was i printing out my secret key :(
-# print(os.getenv("AWS_SECRET_KEY"))
 
 results = []
 indexer = 0

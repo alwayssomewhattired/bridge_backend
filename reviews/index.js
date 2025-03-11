@@ -12,6 +12,7 @@ router.get("/:itemId/reviews/:reviewId", async (req, res, next) => {
   try {
     const itemID = req.params.itemId;
     const id = req.params.reviewId;
+    console.log(req.params.reviewId)
     const response = await getSpecificReview(itemID, id);
     res.send(response);
   } catch (error) {

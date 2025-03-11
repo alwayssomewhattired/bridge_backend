@@ -4,6 +4,7 @@ const {
   isLoggedIn,
   createComment,
   getComments,
+  getReviewComments,
   updateComment,
   deleteComment,
   deleteReview,
@@ -42,6 +43,20 @@ router.get("/me", isLoggedIn, async (req, res, next) => {
     } else {
       const userID = req.user.id;
       const response = await getComments(userID);
+      res.send(response);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/:itemId/comments", isLoggedIn, async (req, res, next) => {
+  try {
+    if (req.user == undefined) {
+      res.status(401).send("No user logged in.");
+    } else {
+      const itemID = req.params.itemId;
+      const response = await getReviewComments(itemID);
       res.send(response);
     }
   } catch (error) {

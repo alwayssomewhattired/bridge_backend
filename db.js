@@ -128,10 +128,9 @@ const getSpecificReview = async (itemID, id) => {
   return response;
 };
 
-const createReview = async (itemID, reviewText, userID, rating) => {
+const createReview = async (itemID, reviewText, userID) => {
   const response = await prisma.Review.create({
     data: {
-      rating,
       reviewText,
       userID,
       itemID,
@@ -182,6 +181,16 @@ const getComments = async (userID) => {
   const response = await prisma.Comment.findMany({
     where: {
       userID,
+    },
+  });
+  console.log(response);
+  return response;
+};
+
+const getReviewComments = async (itemID) => {
+  const response = await prisma.Comment.findMany({
+    where: {
+      itemID,
     },
   });
   console.log(response);
@@ -242,6 +251,7 @@ module.exports = {
   updateReview,
   createComment,
   getComments,
+  getReviewComments,
   updateComment,
   deleteComment,
   deleteReview,

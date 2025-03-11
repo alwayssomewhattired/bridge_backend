@@ -35,8 +35,9 @@ router.post("/register", async (req, res, next) => {
     const password = await bcrypt.hash(normal_password, salt);
     const response = await createUser(username, email, password);
     const token = jwt.sign({ id: response.id }, process.env.JWT);
+    const me = response.id;
     // res.header("Access-Control-Allow-Origin", "*");
-    res.send({ token });
+    res.send({ token, me });
   } catch (error) {
     next(error);
   }
@@ -51,8 +52,9 @@ router.post("/login", async (req, res, next) => {
       error.status = 401;
       throw error;
     }
+    const me = user.id;
     const token = jwt.sign({ id: user.id }, process.env.JWT);
-    res.send({ token });
+    res.send({ token, me });
   } catch (error) {
     console.log(error);
   }
