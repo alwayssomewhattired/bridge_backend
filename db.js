@@ -54,6 +54,24 @@ const getUser = async (id) => {
   return response;
 };
 
+const getUserNamesByIds = async (ids) => {
+  const response = await prisma.User.findMany({
+    where: {
+      id: {
+        in: ids, // Use 'in' to filter multiple IDs
+      },
+    },
+    select: {
+      username: true, // Only select the 'name' field
+    },
+  });
+  console.log(response)
+  // Map to extract names only
+  const names = response.map(User => User.username);
+  console.log(names)
+  return names
+}
+
 const getAllUsers = async () => {
   const response = await prisma.User.findMany({});
   console.log(response);
@@ -187,10 +205,10 @@ const getComments = async (userID) => {
   return response;
 };
 
-const getReviewComments = async (itemID) => {
+const getReviewComments = async (reviewID) => {
   const response = await prisma.Comment.findMany({
     where: {
-      itemID,
+      reviewID,
     },
   });
   console.log(response);
@@ -239,6 +257,7 @@ module.exports = {
   getUser,
   getAllUsers,
   getOneUser,
+  getUserNamesByIds,
   deleteUser,
   updateUser,
   getItems,

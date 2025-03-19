@@ -50,13 +50,27 @@ router.get("/me", isLoggedIn, async (req, res, next) => {
   }
 });
 
-router.get("/:itemId/comments", isLoggedIn, async (req, res, next) => {
+// router.get("/:itemId/comments", isLoggedIn, async (req, res, next) => {
+//   try {
+//     if (req.user == undefined) {
+//       res.status(401).send("No user logged in.");
+//     } else {
+//       const itemID = req.params.itemId;
+//       const response = await getReviewComments(itemID);
+//       res.send(response);
+//     }
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+router.get("/:reviewId/comments", isLoggedIn, async (req, res, next) => {
   try {
     if (req.user == undefined) {
       res.status(401).send("No user logged in.");
     } else {
-      const itemID = req.params.itemId;
-      const response = await getReviewComments(itemID);
+      const reviewID = req.params.reviewId;
+      const response = await getReviewComments(reviewID);
       res.send(response);
     }
   } catch (error) {
