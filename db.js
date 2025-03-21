@@ -65,12 +65,12 @@ const getUserNamesByIds = async (ids) => {
       username: true, // Only select the 'name' field
     },
   });
-  console.log(response)
+  console.log(response);
   // Map to extract names only
-  const names = response.map(User => User.username);
-  console.log(names)
-  return names
-}
+  const names = response.map((User) => User.username);
+  console.log(names);
+  return names;
+};
 
 const getAllUsers = async () => {
   const response = await prisma.User.findMany({});
@@ -119,6 +119,19 @@ const getItem = async (id) => {
   const response = await prisma.Item.findFirstOrThrow({
     where: {
       id,
+    },
+  });
+  console.log(response);
+  return response;
+};
+
+const postAudio = async (id, user, name, description) => {
+  const response = await prisma.Item.create({
+    data: {
+      id,
+      user,
+      name,
+      description,
     },
   });
   console.log(response);
@@ -262,6 +275,7 @@ module.exports = {
   updateUser,
   getItems,
   getItem,
+  postAudio,
   getReview,
   getSpecificReview,
   createReview,
